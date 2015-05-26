@@ -1,4 +1,7 @@
+import jsonschema
 from cliquet import resource, schema
+from cliquet.errors import raise_invalid
+from jsonschema import exceptions as jsonschema_exceptions
 
 from kinto.views import object_exists_or_404
 
@@ -38,3 +41,17 @@ class Record(resource.ProtectedResource):
     def is_known_field(self, field_name):
         """Without schema, any field is considered as known."""
         return True
+
+    def process_record(self, new, old=None):
+        """Validate records against collection schema, if any."""
+        schema = self.request.get_collection_schema()
+        if schema is None:
+            return new
+
+        try:
+            jsonschema.validate(new, schema)
+        except jsonschema_exceptions.ValidationError as e:
+            field = e.path.pop() if e.path else e.validator_value.pop()
+            raise_invalid(self.request, name=field, description=e.message)
+
+        return new

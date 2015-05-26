@@ -13,6 +13,7 @@ with open(os.path.join(here, 'CHANGELOG.rst')) as f:
 REQUIREMENTS = [
     'colander',
     'cornice',
+    'jsonschema',
     'six',
     'waitress',
     'cliquet[postgresql,monitoring]'  # > 2.0 once released.
