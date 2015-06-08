@@ -1,41 +1,13 @@
-from cliquet import errors
-from cornice import Service
 import jsonschema
+from cliquet import resource
 from jsonschema import exceptions as jsonschema_exceptions
-from pyramid import httpexceptions
-from pyramid.security import NO_PERMISSION_REQUIRED
-
-
-schema = Service(name='schema',
-                 description='Collection schema',
-                 path=('/buckets/{bucket_id}'
-                       '/collections/{collection_id}/schema'),
-                 error_handler=errors.json_error_handler)
-
-
-def _schema_key(request):
-    bucket_id = request.matchdict['bucket_id']
-    collection_id = request.matchdict['collection_id']
-    schema_key = 'schema:%s:%s' % (bucket_id, collection_id)
-    return schema_key
-
-
-def get_collection_schema(request):
-    keyvalue = request.registry.cache  # XXX cache --> keyvalue
-    schema = keyvalue.get(_schema_key(request))
-    return schema
-
-
-@schema.get(permission=NO_PERMISSION_REQUIRED)  # XXX perms
-def schema_get(request):
-    schema = request.get_collection_schema()
-    if schema is None:
-        raise httpexceptions.HTTPNotFound()
-
-    return schema
 
 
 def validate_jsonschema(request):
+    """Validate a JSON Schema definition.
+
+    It relies on version 4. See http://json-schema.org.
+    """
     try:
         schema = request.json_body
         assert schema, 'Schema is empty'
@@ -47,17 +19,48 @@ def validate_jsonschema(request):
         request.errors.add('body', '', e.message)
 
 
-@schema.put(validators=(validate_jsonschema,),
-            permission=NO_PERMISSION_REQUIRED)  # XXX perms
-def schema_put(request):
-    keyvalue = request.registry.cache  # XXX cache --> keyvalue
-    schema = request.validated
-    keyvalue.set(_schema_key(request), schema)
-    return schema
+class NoopGenerator(object):
+    def match(self, record_id):
+        return True
 
 
-@schema.delete(permission=NO_PERMISSION_REQUIRED)  # XXX perms
-def schema_delete(request):
-    keyvalue = request.registry.cache  # XXX cache --> keyvalue
-    keyvalue.delete(_schema_key(request))
-    return {}
+@resource.register(name='schema',
+                   collection_methods=tuple(),  # disabled.
+                   validate_schema_for=tuple(),  # disabled.
+                   record_methods=('GET', 'PUT', 'DELETE'),
+                   record_path=('/buckets/{{bucket_id}}'
+                                '/collections/{{collection_id}}/schema'),
+                   record_put_arguments={'validators': validate_jsonschema})
+class Schema(resource.BaseResource):
+    def __init__(self, *args, **kwargs):
+        super(Schema, self).__init__(*args, **kwargs)
+        self.collection.id_generator = NoopGenerator()
+
+        bucket_id = self.request.matchdict['bucket_id']
+        collection_id = self.request.matchdict['collection_id']
+        parent_id = '/buckets/%s/collections/%s' % (bucket_id, collection_id)
+        self.collection.parent_id = parent_id
+
+        # There is only one record.
+        self.record_id = '__entry__'
+
+    def _remove_resource_fields(self, record):
+        # Remove resource fields from schema.
+        record.pop(self.collection.id_field)
+        record.pop(self.collection.modified_field)
+        return record
+
+    def get(self):
+        result = super(Schema, self).get()
+        self._remove_resource_fields(result)
+        return result
+
+    def put(self):
+        result = super(Schema, self).put()
+        self._remove_resource_fields(result)
+        return result
+
+    def delete(self):
+        result = super(Schema, self).delete()
+        self._remove_resource_fields(result)
+        return result

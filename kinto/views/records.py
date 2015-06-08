@@ -2,6 +2,9 @@ import jsonschema
 from cliquet import resource, schema
 from cliquet.errors import raise_invalid
 from jsonschema import exceptions as jsonschema_exceptions
+from pyramid import httpexceptions
+
+from kinto.views import schema as views_schema
 
 from kinto.views import object_exists_or_404
 
@@ -44,7 +47,7 @@ class Record(resource.ProtectedResource):
 
     def process_record(self, new, old=None):
         """Validate records against collection schema, if any."""
-        schema = self.request.get_collection_schema()
+        schema = self._get_collection_schema()
         if schema is None:
             return new
 
@@ -55,3 +58,12 @@ class Record(resource.ProtectedResource):
             raise_invalid(self.request, name=field, description=e.message)
 
         return new
+
+    def _get_collection_schema(self):
+        """Return the JSON schema of the collection matched, or ``None``
+        if not any was defined.
+        """
+        try:
+            return views_schema.Schema(self.request).get()
+        except httpexceptions.HTTPNotFound:
+            pass

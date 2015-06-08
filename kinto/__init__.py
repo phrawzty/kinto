@@ -25,9 +25,4 @@ def main(global_config, **settings):
                        version=__version__,
                        default_settings=DEFAULT_SETTINGS)
     config.scan("kinto.views")
-
-    config.add_request_method(
-        callable='kinto.views.schema.get_collection_schema',
-        name='get_collection_schema')
-
     return config.make_wsgi_app()
