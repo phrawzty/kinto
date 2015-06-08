@@ -75,8 +75,9 @@ class InvalidSchemaTest(BaseWebTest, unittest.TestCase):
         resp = self.app.put_json(SCHEMA_URL,
                                  headers=self.headers,
                                  status=400)
-        self.assertEqual(resp.json['message'],
-                         'No JSON object could be decoded')
+        self.assertIn(resp.json['message'],
+                      ('No JSON object could be decoded',  # PY2
+                       'Expecting value: line 1 column 1 (char 0)'))  # PY3
 
     def test_empty_schema_is_invalid(self):
         resp = self.app.put_json(SCHEMA_URL,

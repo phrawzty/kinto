@@ -1,4 +1,5 @@
 import jsonschema
+import six
 from cliquet import resource
 from jsonschema import exceptions as jsonschema_exceptions
 
@@ -16,7 +17,7 @@ def validate_jsonschema(request):
     except jsonschema_exceptions.SchemaError as e:
         request.errors.add('body', e.path.pop(), e.message)
     except (ValueError, AssertionError) as e:
-        request.errors.add('body', '', e.message)
+        request.errors.add('body', '', six.text_type(e))
 
 
 class NoopGenerator(object):
