@@ -10,6 +10,8 @@ API Endpoints
    groups
    collections
    records
+   schemas
+
 
 
 See `cliquet API documentation <http://cliquet.readthedocs.org/en/latest/api/index.html>`_
