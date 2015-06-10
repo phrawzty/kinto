@@ -113,7 +113,7 @@ class RecordsValidationTest(BaseWebTest, unittest.TestCase):
 
     def test_records_are_invalid_if_do_not_match_schema(self):
         self.app.post_json(RECORDS_URL,
-                           {'body': '<h1>About</h1>'},
+                           {'body': '<h1>Without title</h1>'},
                            headers=self.headers,
                            status=400)
 
@@ -135,17 +135,20 @@ class RecordsValidationTest(BaseWebTest, unittest.TestCase):
                                   status=201)
         record_id = resp.json['id']
         self.app.put_json('%s/%s' % (RECORDS_URL, record_id),
-                          {'body': '<h1>About</h1>'},
+                          {'body': '<h1>Without title</h1>'},
                           headers=self.headers,
                           status=400)
 
     def test_validation_error_response_provides_details(self):
         resp = self.app.post_json(RECORDS_URL,
-                                  {'body': '<h1>About</h1>'},
+                                  {'body': '<h1>Without title</h1>'},
                                   headers=self.headers,
                                   status=400)
         self.assertIn("'title' is a required property", resp.json['message'])
         self.assertEqual(resp.json['details'][0]['name'], 'title')
 
     def test_records_of_other_bucket_are_not_impacted(self):
-        pass
+        other_bucket = RECORDS_URL.replace('blog', 'otherblog')
+        self.app.post_json(other_bucket,
+                           {'body': '<h1>Without title</h1>'},
+                           headers=self.headers)
