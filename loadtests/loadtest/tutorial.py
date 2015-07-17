@@ -146,6 +146,7 @@ class TutorialLoadTest(BaseLoadTest):
         #     import pdb; pdb.set_trace()
         # self.assertEqual(resp.status_code, 201)
         record = resp.json()
+        print record
         self.assertIn('write', record['permissions'])
 
         # Create a new collection and check for permissions
