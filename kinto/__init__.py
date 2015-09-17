@@ -7,6 +7,8 @@ from pyramid.settings import asbool
 from pyramid.security import Authenticated
 from cliquet.authorization import RouteFactory
 
+from kinto import broker, events
+
 # Module version, as defined in PEP-0396.
 __version__ = pkg_resources.get_distribution(__package__).version
 
@@ -49,6 +51,17 @@ def main(global_config, **settings):
     config.scan("kinto.views", **kwargs)
 
     app = config.make_wsgi_app()
+
+    # Helper for notifying events
+    def notify(request, event, *args):
+        klass = config.maybe_dotted('kinto.events.' + event)
+        event = klass(*(args + (request,)))
+        request.registry.notify(event)
+
+    config.add_request_method(notify, 'notify')
+
+    config.registry.broke = broke = broker.KintoBroker()
+    config.add_subscriber(broke.on_bucket_created, events.Bucket)
 
     # Install middleware (idempotent if disabled)
     return cliquet.install_middlewares(app, settings)

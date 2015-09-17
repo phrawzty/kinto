@@ -141,3 +141,10 @@ class Bucket(resource.ProtectedResource):
             storage.purge_deleted(collection_id='record', parent_id=parent_id)
 
         return result
+
+    def put(self):
+        result = super(Bucket, self).put()
+        # XXX: Not sure how to access the 'request' object from here.
+        self.request.notify('Bucket', self.record_id)
+        print 'yeah'
+        return result
