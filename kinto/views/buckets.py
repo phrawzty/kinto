@@ -89,6 +89,8 @@ def default_bucket(request):
         'body': request.body
     })
 
+    request.notify('Bucket', bucket_id)
+
     try:
         response = request.invoke_subrequest(subrequest)
     except HTTPException as error:
@@ -112,7 +114,9 @@ class Bucket(resource.ProtectedResource):
         return ''
 
     def delete(self):
+        self.request.notify('Bucket', self.record_id, 'pre')
         result = super(Bucket, self).delete()
+        self.request.notify('Bucket', self.record_id, 'post')
 
         # Delete groups.
         storage = self.collection.storage
@@ -143,8 +147,14 @@ class Bucket(resource.ProtectedResource):
         return result
 
     def put(self):
+        self.request.notify('Bucket', self.record_id, 'pre')
         result = super(Bucket, self).put()
-        # XXX: Not sure how to access the 'request' object from here.
-        self.request.notify('Bucket', self.record_id)
-        print 'yeah'
+        self.request.notify('Bucket', self.record_id, 'post')
+        return result
+
+    def collection_post(self):
+        # XXX: This returns only 'None' as the bucket ID.
+        self.request.notify('Bucket', self.record_id, 'pre')
+        result = super(Bucket, self).collection_post()
+        self.request.notify('Bucket', self.record_id, 'post')
         return result

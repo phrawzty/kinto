@@ -1,8 +1,14 @@
 class KintoBroker(object):
-    def __init__(self):
-        pass
-
-    def on_bucket_created(self, event):
+    def bucket(self, event):
         bucket = event.bucket_id
+        method = event.request.method
+        when = event.when
 
-        print 'You created a bucket called:', bucket
+        if when == 'pre':
+            print('TRY'),
+        elif when == 'post':
+            print('SUCCESS'),
+        else:
+            print('WTF'),
+
+        print 'Bucket:', bucket, 'with method:', method

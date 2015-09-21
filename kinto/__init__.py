@@ -48,9 +48,6 @@ def main(global_config, **settings):
     flush_enabled = asbool(settings.get('kinto.flush_endpoint_enabled'))
     if not flush_enabled:
         kwargs['ignore'] = 'kinto.views.flush'
-    config.scan("kinto.views", **kwargs)
-
-    app = config.make_wsgi_app()
 
     # Helper for notifying events
     def notify(request, event, *args):
@@ -59,9 +56,12 @@ def main(global_config, **settings):
         request.registry.notify(event)
 
     config.add_request_method(notify, 'notify')
-
     config.registry.broke = broke = broker.KintoBroker()
-    config.add_subscriber(broke.on_bucket_created, events.Bucket)
+    config.add_subscriber(broke.bucket, events.Bucket)
+
+    config.scan("kinto.views", **kwargs)
+
+    app = config.make_wsgi_app()
 
     # Install middleware (idempotent if disabled)
     return cliquet.install_middlewares(app, settings)
