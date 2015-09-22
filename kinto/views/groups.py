@@ -51,6 +51,12 @@ class Group(resource.ProtectedResource):
         return body
 
     def delete(self):
+        self.request.notify(
+            'Group',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'pre'
+        )
         group = self._get_record_or_404(self.record_id)
         permission = self.request.registry.permission
         body = super(Group, self).delete()
@@ -58,6 +64,13 @@ class Group(resource.ProtectedResource):
         for member in group['members']:
             # Remove the group's principal from all members of the group.
             permission.remove_user_principal(member, object_id)
+
+        self.request.notify(
+            'Group',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
         return body
 
     def process_record(self, new, old=None):
@@ -81,3 +94,36 @@ class Group(resource.ProtectedResource):
             permission.remove_user_principal(member, group_id)
 
         return new
+
+    def put(self):
+        self.request.notify(
+            'Group',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'pre'
+        )
+        result = super(Group, self).put()
+        self.request.notify(
+            'Group',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
+        return result
+
+    def collection_post(self):
+        # XXX: This returns only 'None' as the bucket ID.
+        self.request.notify(
+            'Group',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
+        result = super(Group, self).collection_post()
+        self.request.notify(
+            'Group',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
+        return result

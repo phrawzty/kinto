@@ -61,3 +61,68 @@ class Record(resource.ProtectedResource):
             raise_invalid(self.request, name=field, description=e.message)
 
         return new
+
+    def delete(self):
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'pre'
+        )
+        result = super(Record, self).delete()
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
+        return result
+
+    def put(self):
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'pre'
+        )
+        result = super(Record, self).put()
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
+        return result
+
+    def collection_post(self):
+        # XXX: This returns only 'None' as the record ID.
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'pre'
+        )
+        result = super(Record, self).collection_post()
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
+        return result
+
+    def patch(self):
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'pre'
+        )
+        result = super(Record, self).patch()
+        self.request.notify(
+            'Record',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
+        return result

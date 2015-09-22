@@ -116,7 +116,6 @@ class Bucket(resource.ProtectedResource):
     def delete(self):
         self.request.notify('Bucket', self.record_id, 'pre')
         result = super(Bucket, self).delete()
-        self.request.notify('Bucket', self.record_id, 'post')
 
         # Delete groups.
         storage = self.collection.storage
@@ -144,6 +143,7 @@ class Bucket(resource.ProtectedResource):
                                with_deleted=False)
             storage.purge_deleted(collection_id='record', parent_id=parent_id)
 
+        self.request.notify('Bucket', self.record_id, 'post')
         return result
 
     def put(self):

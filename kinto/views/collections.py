@@ -50,6 +50,12 @@ class Collection(resource.ProtectedResource):
         return parent_id
 
     def delete(self):
+        self.request.notify(
+            'Collection',
+            self.collection.parent_id,
+            self.record_id,
+            'pre'
+        )
         result = super(Collection, self).delete()
 
         # Delete records.
@@ -61,4 +67,42 @@ class Collection(resource.ProtectedResource):
                            with_deleted=False)
         storage.purge_deleted(collection_id='record', parent_id=parent_id)
 
+        self.request.notify(
+            'Collection',
+            self.collection.parent_id,
+            self.record_id,
+            'post'
+        )
+        return result
+
+    def patch(self):
+        self.request.notify(
+            'Collection',
+            self.collection.parent_id,
+            self.record_id,
+            'pre'
+        )
+        result = super(Collection, self).patch()
+        self.request.notify(
+            'Collection',
+            self.collection.parent_id,
+            self.record_id,
+            'post'
+        )
+        return result
+
+    def put(self):
+        self.request.notify(
+            'Collection',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'pre'
+        )
+        result = super(Collection, self).put()
+        self.request.notify(
+            'Collection',
+            self.get_parent_id(self.request),
+            self.record_id,
+            'post'
+        )
         return result

@@ -56,8 +56,11 @@ def main(global_config, **settings):
         request.registry.notify(event)
 
     config.add_request_method(notify, 'notify')
-    config.registry.broke = broke = broker.KintoBroker()
-    config.add_subscriber(broke.bucket, events.Bucket)
+    config.registry.broker = eventhandler = broker.KintoBroker()
+    config.add_subscriber(eventhandler.trigger, events.Bucket)
+    config.add_subscriber(eventhandler.trigger, events.Collection)
+    config.add_subscriber(eventhandler.trigger, events.Group)
+    config.add_subscriber(eventhandler.trigger, events.Record)
 
     config.scan("kinto.views", **kwargs)
 
