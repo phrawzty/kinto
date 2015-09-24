@@ -42,7 +42,6 @@ def main(global_config, **settings):
                      '/buckets/default/{subpath:.*}')
     config.add_route('default_bucket', '/buckets/default')
 
-    # Scan Kinto views.
     settings = config.get_settings()
     kwargs = {}
     flush_enabled = asbool(settings.get('kinto.flush_endpoint_enabled'))
@@ -62,6 +61,7 @@ def main(global_config, **settings):
     config.add_subscriber(eventhandler.trigger, events.Group)
     config.add_subscriber(eventhandler.trigger, events.Record)
 
+    # Scan Kinto views.
     config.scan("kinto.views", **kwargs)
 
     app = config.make_wsgi_app()

@@ -89,8 +89,6 @@ def default_bucket(request):
         'body': request.body
     })
 
-    request.notify('Bucket', bucket_id)
-
     try:
         response = request.invoke_subrequest(subrequest)
     except HTTPException as error:
